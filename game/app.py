@@ -1,0 +1,62 @@
+from __future__ import annotations
+
+import random
+
+import pyxel
+
+from game.audio import AudioManager
+from game.constants import FPS, HEIGHT, WIDTH
+from game.input import InputState, read_input
+from game.scenes.base import SceneChange
+from game.scenes.game_over import GameOverScene
+from game.scenes.guardian import GuardianScene
+from game.scenes.loading import LoadingScene
+from game.scenes.play import PlayScene
+from game.scenes.title import TitleScene
+from game.storage import ScoreStore
+from game.unicode_text import UnicodeText
+
+
+class GameApp:
+    def __init__(self) -> None:
+        pyxel.init(WIDTH, HEIGHT, title="Vertical Jump", fps=FPS)
+        self._dt = 1.0 / FPS
+
+        self._audio = AudioManager.create()
+        self._scores = ScoreStore()
+        self._scores.load()
+        self._utext = UnicodeText(font_px=16)
+
+        self._scenes = {
+            "title": TitleScene(self._audio),
+            "guardian": GuardianScene(self._audio, self._utext),
+            "loading": LoadingScene(self._utext),
+            "play": PlayScene(self._audio, self._utext, rng=random.Random(1234)),
+            "game_over": GameOverScene(self._audio, self._scores, self._utext),
+        }
+        self._current = self._scenes["title"]
+        self._current.enter({})
+
+        self._prev_inp: InputState | None = None
+
+    def update(self) -> None:
+        inp = read_input(self._prev_inp)
+        self._prev_inp = inp
+
+        try:
+            change = self._current.update(self._dt, inp)
+        except SystemExit:
+            pyxel.quit()
+            return
+
+        if isinstance(change, SceneChange):
+            self._current = self._scenes[change.next_scene]
+            self._current.enter(change.payload)
+
+    def draw(self) -> None:
+        self._current.draw()
+
+
+def run() -> None:
+    app = GameApp()
+    pyxel.run(app.update, app.draw)

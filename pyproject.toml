@@ -1,0 +1,12 @@
+[project]
+name = "2d_game_pyxel"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+  "pyxel>=2.2.0",
+  "pillow>=10.0.0",
+]
+
+[tool.ruff]
+line-length = 120
+
