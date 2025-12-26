@@ -11,6 +11,20 @@ pip install -r requirements.txt
 python3 -m game
 ```
 
+## 設定（.env）
+
+調整用の設定は `.env` に書けます（起動時に読み込みます）。
+
+- `GAME_SCROLL_START_PLAYER_SCREEN_Y`
+- `GAME_FALL_BELOW_SCREEN_PX`
+- `GAME_WATER_START_OFFSET`
+- `GAME_WATER_BASE_SPEED`
+- `GAME_WATER_SPEED_PER_FLOOR`
+- `GAME_ZONE_FLOOR_STEP`
+- `GAME_ZONE_POPUP_SECONDS`
+- `GAME_TITLE_FONT_PX_BIG`
+- `GAME_GAME_OVER_FONT_PX_BIG`
+
 ## 操作
 
 - ← / →: 移動
@@ -35,4 +49,3 @@ python3 -m game
 pyxelの標準フォントは日本語に対応しないため、この実装では Pillow でTTF/OTFからラスタライズして表示します。
 
 - `GAME_FONT_PATH`（単一）または `GAME_FONT_PATHS`（複数）を設定できます（複数は `:` 区切り、Windowsは `;` 区切り）。
-

@@ -33,6 +33,10 @@ class Player:
 
     charge: float = 0.0
 
+    trait_speed_mult: float = 1.0
+    trait_jump_mult: float = 1.0
+    trait_charge_mult: float = 1.0
+
     speed_boost: float = 0.0
     jump_boost: float = 0.0
     phase: float = 0.0
@@ -48,10 +52,12 @@ class Player:
         return self.phase > 0.0
 
     def x_speed_mult(self) -> float:
-        return 1.55 if self.speed_boost > 0.0 else 1.0
+        boost = 1.55 if self.speed_boost > 0.0 else 1.0
+        return self.trait_speed_mult * boost
 
     def jump_mult(self) -> float:
-        return 1.45 if self.jump_boost > 0.0 else 1.0
+        boost = 1.45 if self.jump_boost > 0.0 else 1.0
+        return self.trait_jump_mult * boost
 
     def update_timers(self, dt: float) -> None:
         self.invuln = max(0.0, self.invuln - dt)
@@ -92,7 +98,7 @@ class Player:
 
     def update_jump_charge(self, dt: float, jump_down: bool, jump_released: bool) -> bool:
         if self.grounded and jump_down:
-            self.charge = clamp(self.charge + dt / JUMP_CHARGE_SECONDS, 0.0, 1.0)
+            self.charge = clamp(self.charge + (dt * self.trait_charge_mult) / JUMP_CHARGE_SECONDS, 0.0, 1.0)
         if self.grounded and jump_released:
             power = lerp(JUMP_MIN_VY, JUMP_MAX_VY, self.charge) * self.jump_mult()
             self.vy = -power
@@ -120,7 +126,6 @@ class Player:
             pyxel.tri(cx, y, x, cy, cx, y + r.h, theme_color)
         else:
             pyxel.rect(x, y, r.w, r.h, theme_color)
-        pyxel.rectb(x, y, r.w, r.h, 0)
 
     def draw_face(self, cam_x: float, cam_y: float, eye_style: str, mouth_style: str, hat_style: str) -> None:
         r = self.rect()
@@ -159,4 +164,3 @@ class Player:
             pyxel.tri(cx, y - 8, cx - 10, y + 6, cx + 10, y + 6, col)
         elif hat_style == "halo":
             pyxel.circb(cx, y - 8, 9, col)
-

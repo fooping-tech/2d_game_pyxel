@@ -78,7 +78,8 @@ class ScoreStore:
     def record(self, rec: RunRecord) -> None:
         _ensure_dir(self.save_dir)
         self.runs.append(rec)
-        self.runs = self.runs[-100:]
+        # Keep only TOP10 for persistence.
+        self.runs = sorted(self.runs, key=lambda r: (r.floor, r.ts), reverse=True)[:10]
         if rec.floor > self.highscore:
             self.highscore = rec.floor
         self.save()
@@ -92,4 +93,3 @@ class ScoreStore:
 
     def top(self, n: int = 10) -> list[RunRecord]:
         return sorted(self.runs, key=lambda r: (r.floor, r.ts), reverse=True)[:n]
-

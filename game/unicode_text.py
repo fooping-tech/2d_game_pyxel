@@ -67,7 +67,7 @@ def _candidate_font_paths() -> list[str]:
     return uniq
 
 
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=16)
 def _load_font(size: int) -> ImageFont.FreeTypeFont:
     for p in _candidate_font_paths():
         try:
@@ -89,14 +89,15 @@ class UnicodeText:
     def __init__(self, *, font_px: int = 14) -> None:
         self.font_px = font_px
 
-    @lru_cache(maxsize=512)
-    def render(self, text: str, color: int) -> TextSprite:
+    @lru_cache(maxsize=1024)
+    def render(self, text: str, color: int, size_px: int | None = None) -> TextSprite:
         if not text:
             img = pyxel.Image(1, 1)
             img.cls(0)
             return TextSprite(img=img, w=0, h=0)
 
-        font = _load_font(self.font_px)
+        size = int(size_px) if size_px is not None else self.font_px
+        font = _load_font(size)
         dummy = Image.new("L", (1, 1), 0)
         draw = ImageDraw.Draw(dummy)
         bbox = draw.textbbox((0, 0), text, font=font)
@@ -116,9 +117,8 @@ class UnicodeText:
                     px.pset(x, y, color)
         return TextSprite(img=px, w=w, h=h)
 
-    def blit(self, x: int, y: int, text: str, color: int) -> None:
-        spr = self.render(text, color)
+    def blit(self, x: int, y: int, text: str, color: int, *, size_px: int | None = None) -> None:
+        spr = self.render(text, color, size_px)
         if spr.w <= 0 or spr.h <= 0:
             return
         pyxel.blt(x, y, spr.img, 0, 0, spr.w, spr.h, colkey=0)
-

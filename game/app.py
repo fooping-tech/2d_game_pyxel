@@ -5,11 +5,14 @@ import random
 import pyxel
 
 from game.audio import AudioManager
+from game.config import GameConfig
 from game.constants import FPS, HEIGHT, WIDTH
+from game.dotenv import load_dotenv
 from game.input import InputState, read_input
 from game.scenes.base import SceneChange
 from game.scenes.game_over import GameOverScene
 from game.scenes.guardian import GuardianScene
+from game.scenes.intro import IntroScene
 from game.scenes.loading import LoadingScene
 from game.scenes.play import PlayScene
 from game.scenes.title import TitleScene
@@ -19,20 +22,23 @@ from game.unicode_text import UnicodeText
 
 class GameApp:
     def __init__(self) -> None:
+        load_dotenv()
         pyxel.init(WIDTH, HEIGHT, title="Vertical Jump", fps=FPS)
         self._dt = 1.0 / FPS
 
+        self._cfg = GameConfig.load()
         self._audio = AudioManager.create()
         self._scores = ScoreStore()
         self._scores.load()
-        self._utext = UnicodeText(font_px=16)
+        self._utext = UnicodeText(font_px=self._cfg.ui_font_px)
 
         self._scenes = {
-            "title": TitleScene(self._audio),
+            "title": TitleScene(self._audio, self._utext, self._cfg),
             "guardian": GuardianScene(self._audio, self._utext),
             "loading": LoadingScene(self._utext),
-            "play": PlayScene(self._audio, self._utext, rng=random.Random(1234)),
-            "game_over": GameOverScene(self._audio, self._scores, self._utext),
+            "intro": IntroScene(self._audio, self._utext, self._cfg),
+            "play": PlayScene(self._audio, self._utext, self._cfg, rng=random.Random(1234)),
+            "game_over": GameOverScene(self._audio, self._scores, self._utext, self._cfg),
         }
         self._current = self._scenes["title"]
         self._current.enter({})

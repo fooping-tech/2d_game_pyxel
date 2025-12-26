@@ -30,7 +30,7 @@ class LoadingScene:
             return None
         prog, done, res = job.snapshot()
         if done and res is not None:
-            return SceneChange("play", {"prompt": self._prompt, "character": res.spec.to_dict()})
+            return SceneChange("intro", {"prompt": self._prompt, "character": res.spec.to_dict()})
         return None
 
     def draw(self) -> None:

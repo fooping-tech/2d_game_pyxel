@@ -36,7 +36,6 @@ class Enemy:
         if self.kind == "spiker" and self.state == 1:
             base = danger
         pyxel.rect(x, y, r.w, r.h, base)
-        pyxel.rectb(x, y, r.w, r.h, 0)
 
         if self.kind == "spiker" and self.state == 1:
             cx = x + r.w // 2
@@ -91,4 +90,3 @@ def update_enemy_behavior(enemy: Enemy, dt: float, world_bounds_x: tuple[int, in
         if r.left < left_x or r.right > right_x:
             enemy.vx *= -1
             r.x = max(left_x, min(r.x, right_x - r.w))
-

@@ -20,5 +20,3 @@ class Item:
         x = int(r.x - cam_x)
         y = int(r.y - cam_y)
         pyxel.rect(x, y, r.w, r.h, color)
-        pyxel.rectb(x, y, r.w, r.h, 0)
-

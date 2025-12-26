@@ -33,15 +33,16 @@ class AudioManager:
 
     def _load_defaults(self) -> None:
         # Sound IDs 0..7 reserved
-        pyxel.sound(0).set("c3g3c4", "t", "7", "n", 10)  # ui_confirm
-        pyxel.sound(1).set("c2g2c3", "t", "6", "n", 12)  # jump
-        pyxel.sound(2).set("c1", "n", "5", "n", 8)  # land
-        pyxel.sound(3).set("g3c4e4", "t", "6", "n", 12)  # pickup
-        pyxel.sound(4).set("c1c1", "n", "7", "n", 16)  # stomp
-        pyxel.sound(5).set("c1d1", "n", "7", "n", 18)  # hit
-        pyxel.sound(6).set("c2b1a1", "t", "5", "n", 24)  # game_over
-        pyxel.sound(7).set("g3", "t", "4", "n", 8)  # water_warn
-        pyxel.sound(8).set("c3d3e3f3g3a3b3c4", "t", "2", "n", 30)  # charge loop-ish
+        pyxel.sounds[0].set("c3g3c4", "t", "7", "n", 10)  # ui_confirm
+        pyxel.sounds[1].set("c2g2c3", "t", "6", "n", 12)  # jump
+        pyxel.sounds[2].set("c1", "n", "5", "n", 8)  # land
+        pyxel.sounds[3].set("g3c4e4", "t", "6", "n", 12)  # pickup
+        pyxel.sounds[4].set("c1c1", "n", "7", "n", 16)  # stomp
+        pyxel.sounds[5].set("c1d1", "n", "7", "n", 18)  # hit
+        pyxel.sounds[6].set("c2b1a1", "t", "5", "n", 24)  # game_over
+        pyxel.sounds[7].set("g3", "t", "4", "n", 8)  # water_warn
+        pyxel.sounds[8].set("c3d3e3f3g3a3b3c4", "t", "2", "n", 30)  # charge loop-ish
+        pyxel.sounds[9].set("c4e4g4c4", "t", "6", "n", 14)  # zone_change
 
         self._add("ui_confirm", 0, channel=0, cooldown_frames=4)
         self._add("jump", 1, channel=0, cooldown_frames=4)
@@ -52,6 +53,7 @@ class AudioManager:
         self._add("game_over", 6, channel=0, cooldown_frames=30)
         self._add("water_warn", 7, channel=0, cooldown_frames=55)
         self._add("charge", 8, channel=1, cooldown_frames=0)
+        self._add("zone_change", 9, channel=0, cooldown_frames=18)
 
     def play(self, name: str, *, volume: float = 1.0) -> None:
         if not self.enabled:
@@ -86,4 +88,3 @@ class AudioManager:
         if channel is None:
             return
         pyxel.stop(channel)
-

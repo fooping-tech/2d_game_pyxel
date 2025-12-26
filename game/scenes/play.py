@@ -5,14 +5,15 @@ import random
 import pyxel
 
 from game.audio import AudioManager
+from game.backgrounds import draw_scrolling_background, zone_for_floor
 from game.character import CharacterSpec
+from game.config import GameConfig
 from game.constants import (
     FLOOR_HEIGHT_PX,
     GRAVITY,
     HEIGHT,
-    WATER_BASE_SPEED,
-    WATER_SPEED_PER_FLOOR,
-    WATER_START_OFFSET,
+    PLAYER_H,
+    PLAYER_W,
     WIDTH,
 )
 from game.effects import HitStop, ParticleSystem, ScreenShake
@@ -38,9 +39,10 @@ from game.util import clamp
 class PlayScene:
     name = "play"
 
-    def __init__(self, audio: AudioManager, utext: UnicodeText, rng: random.Random) -> None:
+    def __init__(self, audio: AudioManager, utext: UnicodeText, cfg: GameConfig, rng: random.Random) -> None:
         self._audio = audio
         self._utext = utext
+        self._cfg = cfg
         self._rng = rng
 
         self._theme: Theme = build_theme("default")
@@ -59,12 +61,15 @@ class PlayScene:
         self._shake = ScreenShake()
         self._hitstop = HitStop()
         self._particles = ParticleSystem()
+        self._gravity = GRAVITY
 
         self._spawn_top_y = 0.0
         self._reason = "defeated"
         self._was_grounded = False
         self._last_water_warn_frame = -10**9
         self._character = CharacterSpec.from_seed(0)
+        self._zone_index = 0
+        self._zone_popup_s = 0.0
 
     def enter(self, payload: dict) -> None:
         prompt = str(payload.get("prompt", ""))
@@ -78,8 +83,13 @@ class PlayScene:
 
         self._start_y = 320.0
         self._player = Player(x=WIDTH / 2 - 16, y=self._start_y, vx=0, vy=0)
-        self._player.hp = 3
-        self._player.max_hp = 3
+        ch_eff = self._character.effective()
+        self._player.trait_speed_mult = ch_eff.speed_mult
+        self._player.trait_jump_mult = ch_eff.jump_mult
+        self._player.trait_charge_mult = ch_eff.charge_mult
+        self._player.max_hp = max(1, int(ch_eff.base_hp))
+        self._player.hp = self._player.max_hp
+        self._gravity = GRAVITY * ch_eff.gravity_mult
 
         self._platforms = []
         self._items = []
@@ -95,15 +105,17 @@ class PlayScene:
         self._platforms.append(ground)
 
         self._spawn_top_y = self._start_y + 90
-        self._water_y = self._start_y + WATER_START_OFFSET
+        self._water_y = self._start_y + self._cfg.water_start_offset
         self._reason = "defeated"
         self._was_grounded = True
         self._last_water_warn_frame = -10**9
+        self._zone_index = 0
+        self._zone_popup_s = 0.0
 
         for _ in range(24):
             self._spawn_more()
 
-        self._camera_y = self._player.y - HEIGHT * 0.60
+        self._camera_y = self._player.y - self._cfg.scroll_start_player_screen_y
         self._camera_x = 0.0
 
     def _current_floor(self) -> int:
@@ -204,15 +216,24 @@ class PlayScene:
                 self._player.vx = 320
             self._player.vy = -420
 
-    def _platform_collisions(self, prev_rect: Rect) -> None:
-        if self._player.can_phase():
+    def _platform_collisions(self, *, prev_x: float, prev_y: float) -> None:
+        # Robust "swept" landing check to avoid tunneling through thin platforms
+        # when falling fast or when int rounding changes edges.
+        if self._player.vy < 0.0:
             return
-        pr = self._player.rect()
+
+        left = self._player.x
+        right = self._player.x + PLAYER_W
+        prev_bottom = prev_y + PLAYER_H
+        cur_bottom = self._player.y + PLAYER_H
+
         for p in self._platforms:
-            if pr.right <= p.rect.left or pr.left >= p.rect.right:
+            if right <= p.rect.left or left >= p.rect.right:
                 continue
-            if prev_rect.bottom <= p.rect.top + 2 and (p.rect.top - 2) <= pr.bottom <= (p.rect.top + 12):
-                self._player.y = p.rect.top - pr.h
+
+            top = float(p.rect.top)
+            if prev_bottom <= top and cur_bottom >= top - 1.0:
+                self._player.y = top - PLAYER_H
                 self._player.vy = 0.0
                 self._player.grounded = True
                 return
@@ -247,10 +268,12 @@ class PlayScene:
             else:
                 self._audio.stop_loop("charge")
 
+        prev_x = self._player.x
+        prev_y = self._player.y
         prev_rect = self._player.rect()
         self._player.grounded = False
 
-        self._player.vy += GRAVITY * dt
+        self._player.vy += self._gravity * dt
         self._player.x += self._player.vx * dt
         self._player.y += self._player.vy * dt
 
@@ -262,7 +285,7 @@ class PlayScene:
             elif self._player.x > WIDTH:
                 self._player.x = -prev_rect.w + 1
 
-        self._platform_collisions(prev_rect)
+        self._platform_collisions(prev_x=prev_x, prev_y=prev_y)
         self._enemy_collisions(prev_rect)
 
         if (not self._was_grounded) and self._player.grounded:
@@ -281,10 +304,18 @@ class PlayScene:
         self._items = [i for i in self._items if not i.taken]
 
         floor = self._current_floor()
+        prev_floor = self._floor
         self._floor = max(self._floor, floor)
         self._min_y = min(self._min_y, self._player.y)
 
-        water_speed = WATER_BASE_SPEED + self._floor * WATER_SPEED_PER_FLOOR
+        prev_zone = zone_for_floor(prev_floor, step=self._cfg.zone_floor_step)
+        cur_zone = zone_for_floor(self._floor, step=self._cfg.zone_floor_step)
+        if cur_zone.index != prev_zone.index:
+            self._audio.play("zone_change")
+            self._zone_index = cur_zone.index
+            self._zone_popup_s = self._cfg.zone_popup_seconds
+
+        water_speed = self._cfg.water_base_speed + self._floor * self._cfg.water_speed_per_floor
         self._water_y -= water_speed * dt
         water_dist = self._water_y - pr.bottom
         if water_dist < 180 and pyxel.frame_count - self._last_water_warn_frame > 55:
@@ -299,7 +330,7 @@ class PlayScene:
             self._audio.stop_loop("charge")
             return SceneChange("game_over", {"floor": self._floor, "reason": self._reason, "prompt": self._theme.prompt})
 
-        target_cam_y = self._player.y - HEIGHT * 0.60
+        target_cam_y = self._player.y - self._cfg.scroll_start_player_screen_y
         self._camera_y = min(self._camera_y, target_cam_y)
         self._camera_x = 0.0
 
@@ -311,19 +342,30 @@ class PlayScene:
         cutoff = self._camera_y + HEIGHT * 2.5
         self._platforms = [p for p in self._platforms if p.rect.y < cutoff]
 
-        if pr.y > self._camera_y + HEIGHT * 1.8:
+        if pr.y > self._camera_y + HEIGHT + self._cfg.fall_below_screen_px:
             self._reason = "fall"
             self._audio.stop_loop("charge")
             return SceneChange("game_over", {"floor": self._floor, "reason": self._reason, "prompt": self._theme.prompt})
 
+        self._zone_popup_s = max(0.0, self._zone_popup_s - dt)
         return None
 
     def _draw_ui(self) -> None:
-        pyxel.text(WIDTH - 80, 6, f"FLOOR {self._floor}", self._theme.fg)
-        pyxel.text(WIDTH - 80, 18, f"HP {self._player.hp}/{self._player.max_hp}", self._theme.fg)
+        bar_h = 44
+        pyxel.rect(0, 0, WIDTH, bar_h, 1)
+        pyxel.rectb(0, 0, WIDTH, bar_h, 5)
+
+        line_left = f"FLOOR {self._floor}"
+        self._utext.blit(12, 12, line_left, 7)
 
         water_dist = int(max(0.0, self._water_y - self._player.rect().bottom))
-        pyxel.text(WIDTH - 112, 30, f"WATER {water_dist}px", self._theme.fg)
+        line_mid = f"WATER {water_dist}px"
+        spr_mid = self._utext.render(line_mid, 6)
+        self._utext.blit(WIDTH // 2 - spr_mid.w // 2, 12, line_mid, 6)
+
+        line_right = f"HP {self._player.hp}/{self._player.max_hp}"
+        spr_right = self._utext.render(line_right, 7)
+        self._utext.blit(WIDTH - spr_right.w - 12, 12, line_right, 7)
 
         effects: list[str] = []
         if self._player.speed_boost > 0:
@@ -335,19 +377,34 @@ class PlayScene:
         if self._player.invuln_item > 0:
             effects.append("INV")
         if effects:
-            pyxel.text(8, 8, " ".join(effects), self._theme.accent)
+            eff = " ".join(effects)
+            self._utext.blit(12, bar_h - 18, eff, 10)
+
+        zone = zone_for_floor(self._floor, step=self._cfg.zone_floor_step)
+        if self._zone_popup_s > 0:
+            t = min(1.0, self._zone_popup_s / max(0.001, self._cfg.zone_popup_seconds))
+            size = int(self._cfg.ui_font_px + (self._cfg.ui_font_px_big - self._cfg.ui_font_px) * t)
+            text = zone.name_jp
+            spr = self._utext.render(text, self._theme.accent, size)
+            self._utext.blit(WIDTH // 2 - spr.w // 2, bar_h + 8, text, self._theme.accent, size_px=size)
 
     def draw(self) -> None:
-        pyxel.cls(self._theme.bg)
-
         shake_x, shake_y = self._shake.offset(self._rng)
         cam_x = self._camera_x + shake_x
         cam_y = self._camera_y + shake_y
+        draw_scrolling_background(
+            start_y=self._start_y,
+            cam_y=cam_y,
+            floor_height_px=FLOOR_HEIGHT_PX,
+            zone_step=self._cfg.zone_floor_step,
+            tick=pyxel.frame_count,
+        )
 
         water_screen_y = int(self._water_y - cam_y)
         if water_screen_y < HEIGHT:
             y = max(0, water_screen_y)
             pyxel.rect(0, y, WIDTH, HEIGHT - y, 12)
+            _draw_water_surface(y=y, tick=pyxel.frame_count, w=WIDTH)
 
         for p in self._platforms:
             p.draw(cam_x, cam_y, self._theme.fg)
@@ -379,3 +436,13 @@ class PlayScene:
         prompt = self._theme.prompt
         if prompt:
             self._utext.blit(8, HEIGHT - 16, prompt[:60], 6)
+
+
+def _draw_water_surface(*, y: int, tick: int, w: int) -> None:
+    if y <= 0 or y >= pyxel.height:
+        return
+    pyxel.line(0, y, w, y, 7)
+    phase = (tick // 4) % 8
+    for x in range(0, w, 6):
+        yy = y + ((x + phase) % 8 == 0)
+        pyxel.pset(x, yy, 15)

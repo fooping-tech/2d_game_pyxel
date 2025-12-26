@@ -2,16 +2,20 @@ from __future__ import annotations
 
 import pyxel
 
+from game.config import GameConfig
 from game.constants import HEIGHT, WIDTH
 from game.audio import AudioManager
 from game.scenes.base import SceneChange
+from game.unicode_text import UnicodeText
 
 
 class TitleScene:
     name = "title"
 
-    def __init__(self, audio: AudioManager) -> None:
+    def __init__(self, audio: AudioManager, utext: UnicodeText, cfg: GameConfig) -> None:
         self._audio = audio
+        self._utext = utext
+        self._cfg = cfg
         self._t = 0.0
 
     def enter(self, payload: dict) -> None:  # noqa: ARG002
@@ -28,9 +32,19 @@ class TitleScene:
 
     def draw(self) -> None:
         pyxel.cls(1)
-        pyxel.text(WIDTH // 2 - 48, 130, "VERTICAL JUMP", 7)
-        pyxel.text(WIDTH // 2 - 74, 210, "Enter: start   Esc: quit", 6)
-        pyxel.text(WIDTH // 2 - 92, 250, "<-/-> move  Space/Z charge jump", 6)
+        title = "VERTICAL JUMP"
+        spr = self._utext.render(title, 7, self._cfg.title_font_px_big)
+        self._utext.blit(WIDTH // 2 - spr.w // 2, 120, title, 7, size_px=self._cfg.title_font_px_big)
+
+        hint1 = "Enter: start   Esc: quit"
+        spr1 = self._utext.render(hint1, 6)
+        self._utext.blit(WIDTH // 2 - spr1.w // 2, 210, hint1, 6)
+
+        hint2 = "←/→ move  Space/Z charge jump"
+        spr2 = self._utext.render(hint2, 6)
+        self._utext.blit(WIDTH // 2 - spr2.w // 2, 250, hint2, 6)
 
         if int(self._t * 2) % 2 == 0:
-            pyxel.text(WIDTH // 2 - 40, HEIGHT - 110, "PRESS ENTER", 10)
+            press = "PRESS ENTER"
+            sprp = self._utext.render(press, 10)
+            self._utext.blit(WIDTH // 2 - sprp.w // 2, HEIGHT - 120, press, 10)

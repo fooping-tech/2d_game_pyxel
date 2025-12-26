@@ -16,4 +16,5 @@ class Platform:
         x = int(r.x - cam_x)
         y = int(r.y - cam_y)
         pyxel.rect(x, y, r.w, r.h, color)
-
+        # Boost contrast against pale backgrounds.
+        pyxel.rectb(x, y, r.w, r.h, 1)
