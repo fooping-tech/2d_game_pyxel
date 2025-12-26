@@ -36,6 +36,7 @@ class IntroScene:
         else:
             self._character = CharacterSpec.from_seed(0)
         self._t_left = 5.0
+        self._audio.play_bgm("intro")
         self._audio.play("ui_confirm")
 
     def update(self, dt: float, inp) -> SceneChange | None:  # type: ignore[override]

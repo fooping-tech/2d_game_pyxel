@@ -20,6 +20,7 @@ class TitleScene:
 
     def enter(self, payload: dict) -> None:  # noqa: ARG002
         self._t = 0.0
+        self._audio.play_bgm("title")
 
     def update(self, dt: float, inp) -> SceneChange | None:  # type: ignore[override]
         self._t += dt

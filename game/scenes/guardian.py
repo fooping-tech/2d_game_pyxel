@@ -46,6 +46,7 @@ class GuardianScene:
         self._selection = 0
         self._free_text = ""
         self._answers = []
+        self._audio.play_bgm("select")
 
     def _append_text(self) -> None:
         if self._selection != 3:

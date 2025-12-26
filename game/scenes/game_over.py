@@ -24,6 +24,7 @@ class GameOverScene:
 
     def enter(self, payload: dict) -> None:
         self._payload = payload
+        self._audio.play_bgm("game_over")
         self._audio.play("game_over")
         floor = int(payload.get("floor", 0))
         reason = str(payload.get("reason", "defeated"))

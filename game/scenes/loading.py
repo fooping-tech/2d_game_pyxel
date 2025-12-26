@@ -21,6 +21,7 @@ class LoadingScene:
         self._prompt = str(payload.get("prompt", ""))
         theme = build_theme(self._prompt or "default")
         self._bg = theme.bg
+        # Keep selection BGM during loading.
         self._job = GenerationJob(prompt=self._prompt, seed=theme.seed)
         self._job.start()
 

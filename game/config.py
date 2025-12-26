@@ -42,6 +42,11 @@ class GameConfig:
     ui_font_px_big: int
     title_font_px_big: int
     game_over_font_px_big: int
+    zone_text_font_px: int
+    zone_text_font_px_big: int
+
+    sfx_volume: float
+    bgm_volume: float
 
     @classmethod
     def load(cls) -> "GameConfig":
@@ -64,4 +69,8 @@ class GameConfig:
             # Only title/game-over font sizes are user-tunable via .env.
             title_font_px_big=max(10, _env_int("GAME_TITLE_FONT_PX_BIG", 30)),
             game_over_font_px_big=max(10, _env_int("GAME_GAME_OVER_FONT_PX_BIG", 30)),
+            zone_text_font_px=max(8, _env_int("GAME_ZONE_TEXT_FONT_PX", 22)),
+            zone_text_font_px_big=max(10, _env_int("GAME_ZONE_TEXT_FONT_PX_BIG", 36)),
+            sfx_volume=max(0.0, min(1.0, _env_float("GAME_SFX_VOLUME", 0.9))),
+            bgm_volume=max(0.0, min(1.0, _env_float("GAME_BGM_VOLUME", 0.55))),
         )

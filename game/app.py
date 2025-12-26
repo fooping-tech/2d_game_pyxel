@@ -27,7 +27,7 @@ class GameApp:
         self._dt = 1.0 / FPS
 
         self._cfg = GameConfig.load()
-        self._audio = AudioManager.create()
+        self._audio = AudioManager.create(self._cfg)
         self._scores = ScoreStore()
         self._scores.load()
         self._utext = UnicodeText(font_px=self._cfg.ui_font_px)
