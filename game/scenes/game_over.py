@@ -79,6 +79,6 @@ class GameOverScene:
             p = (r.prompt or "")[:14]
             self._utext.blit(col_x, y, f"{i:2d}. {r.floor:4d}F  {p}", 6)
 
-        hint = "Enter: retry   Esc: title"
+        hint = "Enter/Space: retry   Esc: title"
         sh2 = self._utext.render(hint, 6)
         self._utext.blit(WIDTH // 2 - sh2.w // 2, HEIGHT - 120, hint, 6)

@@ -9,6 +9,7 @@ from game.constants import HEIGHT, WIDTH
 from game.scenes.base import SceneChange
 from game.theme import build_theme
 from game.unicode_text import UnicodeText
+from game.sprites import SPR_H, SPR_W, character_sprite
 
 
 class IntroScene:
@@ -104,7 +105,7 @@ class IntroScene:
             self._utext.blit(tx, ty, f"{name:7s} {val}", 6)
             ty += 22
 
-        hint = "Enter: start   Esc: title"
+        hint = "Enter/Space: start   Esc: title"
         sh = self._utext.render(hint, 6)
         self._utext.blit(WIDTH // 2 - sh.w // 2, HEIGHT - 90, hint, 6)
 
@@ -119,48 +120,21 @@ def _draw_portrait(
     shape_style: str,
     character: CharacterSpec,
 ) -> None:
-    # Body (same style selection as `Player.draw()`)
-    if shape_style == "round":
-        pyxel.elli(x, y, w, h, body_color)
-    elif shape_style == "spiky":
-        cx = x + w // 2
-        cy = y + h // 2
-        pyxel.tri(cx, y, x + w, cy, cx, y + h, body_color)
-        pyxel.tri(cx, y, x, cy, cx, y + h, body_color)
-    else:
-        pyxel.rect(x, y, w, h, body_color)
-
-    # Face / hat (same styles as `Player.draw_face()`, scaled)
-    cx = x + w // 2
-    eye_y = y + int(h * 0.35)
-    eye_dx = int(w * 0.18)
-    col = 0
-
-    if character.eye_style == "sleepy":
-        pyxel.line(cx - eye_dx - 10, eye_y, cx - eye_dx + 10, eye_y, col)
-        pyxel.line(cx + eye_dx - 10, eye_y, cx + eye_dx + 10, eye_y, col)
-    else:
-        pyxel.circ(cx - eye_dx, eye_y, 2, col)
-        pyxel.circ(cx + eye_dx, eye_y, 2, col)
-        if character.eye_style == "angry":
-            pyxel.line(cx - eye_dx - 14, eye_y - 10, cx - eye_dx + 10, eye_y - 5, col)
-            pyxel.line(cx + eye_dx - 10, eye_y - 5, cx + eye_dx + 14, eye_y - 10, col)
-
-    mouth_y = y + int(h * 0.64)
-    if character.mouth_style == "flat":
-        pyxel.line(cx - 14, mouth_y, cx + 14, mouth_y, col)
-    elif character.mouth_style == "fang":
-        pyxel.line(cx - 16, mouth_y, cx + 16, mouth_y, col)
-        pyxel.tri(cx - 2, mouth_y, cx + 2, mouth_y, cx, mouth_y + 10, col)
-    else:
-        pyxel.line(cx - 12, mouth_y, cx + 12, mouth_y, col)
-        pyxel.pset(cx - 12, mouth_y - 2, col)
-        pyxel.pset(cx + 12, mouth_y - 2, col)
-
-    if character.hat_style == "triangle":
-        pyxel.tri(cx, y - 18, cx - 20, y + 10, cx + 20, y + 10, col)
-    elif character.hat_style == "halo":
-        pyxel.circb(cx, y - 18, 18, col)
+    spr = character_sprite(
+        body_color=body_color,
+        shape_style=shape_style,
+        eye_style=character.eye_style,
+        mouth_style=character.mouth_style,
+        hat_style=character.hat_style,
+        pose="stand",
+    )
+    # Scale as large as possible while preserving pixel look.
+    scale = max(1, min(w // SPR_W, h // SPR_H))
+    dw = SPR_W * scale
+    dh = SPR_H * scale
+    dx = x + w // 2 - dw // 2
+    dy = y + h // 2 - dh // 2
+    pyxel.blt(dx, dy, spr, 0, 0, SPR_W, SPR_H, colkey=0, scale=scale)
 
 
 def _draw_radar(

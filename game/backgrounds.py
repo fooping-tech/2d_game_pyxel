@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 import pyxel
 
+from game.pixel_art import zone_tile
+
 
 @dataclass(frozen=True)
 class Zone:
@@ -55,45 +57,17 @@ def draw_scrolling_background(
     """
     int_cam_y = int(cam_y)
 
-    # Draw in coarse horizontal stripes to keep it cheap.
-    stripe_h = 6
-    for sy in range(0, pyxel.height, stripe_h):
-        world_y = int_cam_y + sy + stripe_h // 2
+    tile_size = 32
+    # Make background objects larger (tile scales motifs) and keep them pale.
+    tile_size = 160
+    y_off = -(int_cam_y % tile_size)
+    for sy in range(y_off, pyxel.height, tile_size):
+        world_y = int_cam_y + sy + tile_size // 2
         floor = _floor_for_world_y(start_y=start_y, world_y=float(world_y), floor_height_px=floor_height_px)
         zone = zone_for_floor(floor, step=zone_step)
-        pyxel.rect(0, sy, pyxel.width, stripe_h, zone.bg)
-
-    # Light dot pattern, stable in world coordinates.
-    dot_step = 8
-    for sy in range(0, pyxel.height, dot_step):
-        world_y = int_cam_y + sy
-        floor = _floor_for_world_y(start_y=start_y, world_y=float(world_y), floor_height_px=floor_height_px)
-        zone = zone_for_floor(floor, step=zone_step)
-        x0 = (world_y // dot_step) % dot_step
-        for sx in range(x0, pyxel.width, dot_step):
-            pyxel.pset(sx, sy, zone.dot)
-
-    # Zone-specific motifs, repeated in world space (so they scroll).
-    zone_h = max(1, floor_height_px * max(1, zone_step))
-    top_world = int_cam_y
-    bottom_world = int_cam_y + pyxel.height
-    first_band = (top_world // zone_h) - 1
-    last_band = (bottom_world // zone_h) + 1
-
-    for band in range(first_band, last_band + 1):
-        band_top = band * zone_h
-        band_bottom = band_top + zone_h
-        band_mid = (band_top + band_bottom) // 2
-        floor_mid = _floor_for_world_y(start_y=start_y, world_y=float(band_mid), floor_height_px=floor_height_px)
-        zone = zone_for_floor(floor_mid, step=zone_step)
-
-        # Only draw if the band overlaps the screen.
-        if band_bottom < top_world or band_top > bottom_world:
-            continue
-
-        _draw_zone_motif(zone, int_cam_y=int_cam_y, band_top=band_top, band_bottom=band_bottom, tick=tick)
-
-    _draw_pale_overlay(tick=tick)
+        img = zone_tile(zone_index=zone.index, bg=zone.bg, dot=zone.dot, accent=zone.accent, size=tile_size)
+        for sx in range(0, pyxel.width, tile_size):
+            pyxel.blt(sx, sy, img, 0, 0, tile_size, tile_size, colkey=None)
 
 
 def _draw_zone_motif(zone: Zone, *, int_cam_y: int, band_top: int, band_bottom: int, tick: int) -> None:

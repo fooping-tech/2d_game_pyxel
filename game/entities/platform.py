@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import pyxel
 
 from game.geom import Rect
+from game.pixel_art import platform_tile
 
 
 @dataclass
@@ -15,6 +16,8 @@ class Platform:
         r = self.rect
         x = int(r.x - cam_x)
         y = int(r.y - cam_y)
-        pyxel.rect(x, y, r.w, r.h, color)
-        # Boost contrast against pale backgrounds.
-        pyxel.rectb(x, y, r.w, r.h, 1)
+        tile = platform_tile(fill=color, outline=1, size=8)
+        ts = 8
+        for yy in range(y, y + r.h, ts):
+            for xx in range(x, x + r.w, ts):
+                pyxel.blt(xx, yy, tile, 0, 0, ts, ts, colkey=0)

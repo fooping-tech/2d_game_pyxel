@@ -16,6 +16,7 @@ from game.constants import (
     PLAYER_X_FRICTION,
 )
 from game.geom import Rect
+from game.sprites import SPR_H, SPR_W, character_sprite
 from game.util import clamp, lerp
 
 
@@ -109,7 +110,17 @@ class Player:
             self.charge = 0.0
         return False
 
-    def draw(self, cam_x: float, cam_y: float, theme_color: int, style: str) -> None:
+    def draw(
+        self,
+        cam_x: float,
+        cam_y: float,
+        theme_color: int,
+        style: str,
+        *,
+        eye_style: str,
+        mouth_style: str,
+        hat_style: str,
+    ) -> None:
         r = self.rect()
         x = int(r.x - cam_x)
         y = int(r.y - cam_y)
@@ -117,50 +128,13 @@ class Player:
         if self.is_invulnerable() and (pyxel.frame_count // 5) % 2 == 0:
             return
 
-        if style == "round":
-            pyxel.circ(x + r.w // 2, y + r.h // 2, min(r.w, r.h) // 2, theme_color)
-        elif style == "spiky":
-            cx = x + r.w // 2
-            cy = y + r.h // 2
-            pyxel.tri(cx, y, x + r.w, cy, cx, y + r.h, theme_color)
-            pyxel.tri(cx, y, x, cy, cx, y + r.h, theme_color)
-        else:
-            pyxel.rect(x, y, r.w, r.h, theme_color)
-
-    def draw_face(self, cam_x: float, cam_y: float, eye_style: str, mouth_style: str, hat_style: str) -> None:
-        r = self.rect()
-        x = int(r.x - cam_x)
-        y = int(r.y - cam_y)
-        if r.w < 10 or r.h < 10:
-            return
-
-        cx = x + r.w // 2
-        eye_y = y + int(r.h * 0.35)
-        eye_dx = int(r.w * 0.18)
-        col = 0
-
-        if eye_style == "sleepy":
-            pyxel.line(cx - eye_dx - 5, eye_y, cx - eye_dx + 5, eye_y, col)
-            pyxel.line(cx + eye_dx - 5, eye_y, cx + eye_dx + 5, eye_y, col)
-        else:
-            pyxel.circ(cx - eye_dx, eye_y, 1, col)
-            pyxel.circ(cx + eye_dx, eye_y, 1, col)
-            if eye_style == "angry":
-                pyxel.line(cx - eye_dx - 7, eye_y - 5, cx - eye_dx + 5, eye_y - 2, col)
-                pyxel.line(cx + eye_dx - 5, eye_y - 2, cx + eye_dx + 7, eye_y - 5, col)
-
-        mouth_y = y + int(r.h * 0.64)
-        if mouth_style == "flat":
-            pyxel.line(cx - 7, mouth_y, cx + 7, mouth_y, col)
-        elif mouth_style == "fang":
-            pyxel.line(cx - 8, mouth_y, cx + 8, mouth_y, col)
-            pyxel.tri(cx - 1, mouth_y, cx + 1, mouth_y, cx, mouth_y + 4, col)
-        else:
-            pyxel.line(cx - 6, mouth_y, cx + 6, mouth_y, col)
-            pyxel.pset(cx - 6, mouth_y - 1, col)
-            pyxel.pset(cx + 6, mouth_y - 1, col)
-
-        if hat_style == "triangle":
-            pyxel.tri(cx, y - 8, cx - 10, y + 6, cx + 10, y + 6, col)
-        elif hat_style == "halo":
-            pyxel.circb(cx, y - 8, 9, col)
+        spr = character_sprite(
+            body_color=theme_color,
+            shape_style=style,
+            eye_style=eye_style,
+            mouth_style=mouth_style,
+            hat_style=hat_style,
+            pose="crouch" if (self.grounded and self.charge > 0.02) else "stand",
+        )
+        scale = min(8, max(1, PLAYER_W // SPR_W))
+        pyxel.blt(x, y, spr, 0, 0, SPR_W, SPR_H, colkey=0, scale=scale)

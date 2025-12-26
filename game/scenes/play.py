@@ -417,8 +417,15 @@ class PlayScene:
             e.draw(cam_x, cam_y, self._theme.fg, self._theme.danger)
 
         self._particles.draw(cam_x, cam_y)
-        self._player.draw(cam_x, cam_y, self._theme.accent, self._theme.shape_style)
-        self._player.draw_face(cam_x, cam_y, self._character.eye_style, self._character.mouth_style, self._character.hat_style)
+        self._player.draw(
+            cam_x,
+            cam_y,
+            self._theme.accent,
+            self._theme.shape_style,
+            eye_style=self._character.eye_style,
+            mouth_style=self._character.mouth_style,
+            hat_style=self._character.hat_style,
+        )
 
         if self._player.grounded and self._player.charge > 0:
             pr = self._player.rect()

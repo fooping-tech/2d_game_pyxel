@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import pyxel
 
 from game.geom import Rect
+from game.pixel_art import enemy_sprite
 from game.util import clamp
 
 
@@ -32,14 +33,9 @@ class Enemy:
         r = self.rect
         x = int(r.x - cam_x)
         y = int(r.y - cam_y)
-        base = color
-        if self.kind == "spiker" and self.state == 1:
-            base = danger
-        pyxel.rect(x, y, r.w, r.h, base)
-
-        if self.kind == "spiker" and self.state == 1:
-            cx = x + r.w // 2
-            pyxel.tri(cx - 10, y, cx, y - 10, cx + 10, y, danger)
+        img, sw, sh = enemy_sprite(kind=self.kind, state=self.state, fill=color, danger=danger)
+        scale = max(1, min(r.w // sw, r.h // sh))
+        pyxel.blt(x, y, img, 0, 0, sw, sh, colkey=0, scale=scale)
 
 
 def make_walker(x: int, y: int) -> Enemy:

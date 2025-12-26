@@ -37,7 +37,7 @@ class TitleScene:
         spr = self._utext.render(title, 7, self._cfg.title_font_px_big)
         self._utext.blit(WIDTH // 2 - spr.w // 2, 120, title, 7, size_px=self._cfg.title_font_px_big)
 
-        hint1 = "Enter: start   Esc: quit"
+        hint1 = "Enter/Space: start   Esc: quit"
         spr1 = self._utext.render(hint1, 6)
         self._utext.blit(WIDTH // 2 - spr1.w // 2, 210, hint1, 6)
 
@@ -46,6 +46,6 @@ class TitleScene:
         self._utext.blit(WIDTH // 2 - spr2.w // 2, 250, hint2, 6)
 
         if int(self._t * 2) % 2 == 0:
-            press = "PRESS ENTER"
+            press = "PRESS ENTER/SPACE"
             sprp = self._utext.render(press, 10)
             self._utext.blit(WIDTH // 2 - sprp.w // 2, HEIGHT - 120, press, 10)

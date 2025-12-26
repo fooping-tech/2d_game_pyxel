@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import math
 import pyxel
 
 from game.audio import AudioManager
 from game.constants import HEIGHT, WIDTH
+from game.pixel_art import boss_sprite
 from game.scenes.base import SceneChange
 from game.unicode_text import UnicodeText
 
@@ -128,6 +130,16 @@ class GuardianScene:
     def draw(self) -> None:
         pyxel.cls(2)
 
+        # Big boss at the top, writhing while asking questions.
+        state = (pyxel.frame_count // 20) % 2
+        img, bw, bh = boss_sprite(state=state)
+        scale = 3
+        wobble_y = int(math.sin(pyxel.frame_count * 0.10) * 6)
+        wobble_x = int(math.sin(pyxel.frame_count * 0.07) * 4)
+        x = WIDTH // 2 - (bw * scale) // 2 + wobble_x
+        y = 0 + wobble_y
+        pyxel.blt(x, y, img, 0, 0, bw, bh, colkey=0, scale=scale)
+
         y = 38
         for line in self._guardian_lines:
             self._utext.blit(40, y, line, 7)
@@ -162,4 +174,4 @@ class GuardianScene:
         typed = self._free_text or "（ここに入力）"
         self._utext.blit(box_x + 8, box_y + 6, typed, 6)
 
-        pyxel.text(panel_x + 18, panel_y + panel_h - 26, "Up/Down or 1-4, Enter confirm, Esc back", 5)
+        pyxel.text(panel_x + 18, panel_y + panel_h - 26, "Up/Down or 1-4, Enter/Space confirm, Esc back", 5)

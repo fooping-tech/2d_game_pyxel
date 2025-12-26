@@ -28,7 +28,6 @@ def read_input(prev: InputState | None) -> InputState:
     state.jump_pressed = (not prev.jump_down) and state.jump_down
     state.jump_released = prev.jump_down and (not state.jump_down)
 
-    state.confirm = pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.KEY_KP_ENTER)
+    state.confirm = pyxel.btnp(pyxel.KEY_RETURN) or pyxel.btnp(pyxel.KEY_KP_ENTER) or pyxel.btnp(pyxel.KEY_SPACE)
     state.back = pyxel.btnp(pyxel.KEY_ESCAPE)
     return state
-
