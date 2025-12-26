@@ -69,13 +69,15 @@ class GameOverScene:
         header = "RANKING (TOP 10)"
         sh = self._utext.render(header, 7)
         self._utext.blit(WIDTH // 2 - sh.w // 2, 336, header, 7)
-        y = 364
+        y0 = 364
+        row_h = 16
+        left_x = WIDTH // 2 - 360
+        right_x = WIDTH // 2 + 40
         for i, r in enumerate(self._ranking[:10], start=1):
-            p = (r.prompt or "")[:18]
-            self._utext.blit(WIDTH // 2 - 240, y, f"{i:2d}. {r.floor:4d}F  {p}", 6)
-            y += 22
-            if y > HEIGHT - 160:
-                break
+            col_x = left_x if i <= 5 else right_x
+            y = y0 + ((i - 1) % 5) * row_h
+            p = (r.prompt or "")[:14]
+            self._utext.blit(col_x, y, f"{i:2d}. {r.floor:4d}F  {p}", 6)
 
         hint = "Enter: retry   Esc: title"
         sh2 = self._utext.render(hint, 6)
