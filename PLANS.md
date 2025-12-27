@@ -143,6 +143,8 @@
 
 - `gamepad="enabled"` は `pyxel.js` 側の仮想ゲームパッド（タッチUI）表示であり、**ゲーム本体がWebで動くこと**とは別問題。
 - 本プロジェクトは日本語描画に `Pillow` を使っているため、Pyodide環境（`<pyxel-run>`）での動作可否は要検証。Web向けには「Pillow不要な描画手段」へ寄せるか、Webビルド方式を `pyxel app2html` に統一して検証する。
+- GitHub Actions（Ubuntu）で `ImportError: libSDL2-2.0.so.0` が出る場合は、pyxelのネイティブモジュールがSDL2ランタイムに依存しているのが原因。
+  - 対策: workflowに `apt-get install -y libsdl2-2.0-0` を追加してから `pip install` / ビルドを実行する。
 
 ## ゲームパッド対応（計画）
 
