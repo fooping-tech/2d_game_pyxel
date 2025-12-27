@@ -189,6 +189,33 @@
     - `Build and deployment` の `Source` を `GitHub Actions` に設定する。
     - 初回は権限反映に時間がかかることがあるため、設定後にworkflowを再実行する。
 
+### スマホで音が出ない対策（iOS Safari）
+
+背景: iOS Safari はユーザー操作があるまで AudioContext が `suspended` のままになり、BGM/SE が鳴らないことがある。
+
+対策方針:
+
+- GitHub Pagesに配布するHTMLは `<pyxel-run ... gamepad="enabled">` 方式に切り替え、`touchstart/click` のユーザー操作で `SDL2.audioContext.resume()` を呼び出す。
+- これにより、最初のタップ/クリックを「音再生許可のジェスチャ」として扱い、以降BGM/SEが鳴るようにする。
+
+実装ステップ:
+
+1. `scripts/build_site.sh` を追加
+   - `site/` を生成し、`game/` と `config.toml` と起動用 `main.py` をコピーする。
+   - GitHub Pagesのディレクトリ配信制約に対応するため、`site/game` 配下など主要ディレクトリに最小 `index.html` を配置する。
+   - `site/index.html` は `pyxel.js` を読み込み、以下を含む:
+     - `<pyxel-run root=\".\" name=\"main.py\" gamepad=\"enabled\"></pyxel-run>`
+     - 矢印キー/スペースでページがスクロールしない `preventDefault`
+     - iOS向け `touchstart/click` で `window.pyxelContext?.pyodide?._module?.SDL2?.audioContext.resume()` を試行
+
+2. GitHub Actionsを `site/` デプロイに切り替え
+   - `python scripts/build_pages.py` ではなく `bash scripts/build_site.sh` を実行して `site/` を `upload-pages-artifact` する。
+
+受け入れ条件:
+
+- iPhone Safariで起動し、最初のタップ後にBGM/SEが鳴る。
+- 仮想ゲームパッド（`gamepad=\"enabled\"`）が表示される。
+
 ## ゲームパッド対応（計画）
 
 目的: キーボードに加えてゲームパッドでもプレイ/操作できるようにする（ローカル/HTML両方を想定）。

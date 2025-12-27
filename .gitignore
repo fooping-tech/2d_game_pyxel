@@ -8,6 +8,8 @@ dist/
 build/
 
 .env
+site/
+dist/
 
 save/*.tmp
 save/*.json

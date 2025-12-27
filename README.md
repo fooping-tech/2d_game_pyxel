@@ -45,16 +45,17 @@ GitHub ActionsでHTML版をビルドしてGitHub Pagesへデプロイできま�
 ### ローカルでHTML生成
 
 ```bash
-python3 scripts/build_pages.py
+bash scripts/build_site.sh
 ```
 
-生成物は `dist/index.html` です。
+生成物は `site/index.html` です。
 
 ### GitHub Actions（CI）での注意
 
 - Ubuntu上で `ImportError: libSDL2-2.0.so.0` が出る場合はSDL2不足が原因です（workflowで `libsdl2-2.0-0` を導入します）。
 - Web版は環境によって日本語フォント描画（`Pillow`）が使えないため、文字が `???` になることがあります。その場合はWeb版だけ英語表示にフォールバックします（日本語はローカル実行で表示できます）。
   - 強制的に英語にする: `GAME_LANG=en`
+- iOS Safariはユーザー操作があるまで音が鳴らないことがあるため、`site/index.html` でタップ/クリック時に AudioContext を `resume()` する処理を入れています。
 
 ## 操作
 
