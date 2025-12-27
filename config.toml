@@ -18,7 +18,7 @@ zone_text_font_px_big = 36
 
 # audio
 sfx_volume = 0.90
-bgm_volume = 0.55
+bgm_volume = 0.1
 
 # title / game over fonts
 title_font_px_big = 30
