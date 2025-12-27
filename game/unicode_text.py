@@ -7,7 +7,15 @@ from pathlib import Path
 
 import pyxel
 
-from PIL import Image, ImageDraw, ImageFont  # type: ignore[import-not-found]
+try:
+    from PIL import Image, ImageDraw, ImageFont  # type: ignore[import-not-found]
+
+    _PIL_OK = True
+except Exception:  # pragma: no cover
+    Image = None  # type: ignore[assignment]
+    ImageDraw = None  # type: ignore[assignment]
+    ImageFont = None  # type: ignore[assignment]
+    _PIL_OK = False
 
 
 def _split_paths(value: str) -> list[str]:
@@ -69,6 +77,8 @@ def _candidate_font_paths() -> list[str]:
 
 @lru_cache(maxsize=16)
 def _load_font(size: int) -> ImageFont.FreeTypeFont:
+    if not _PIL_OK:
+        raise RuntimeError("Pillow is not available")
     for p in _candidate_font_paths():
         try:
             if Path(p).exists():
@@ -95,6 +105,16 @@ class UnicodeText:
             img = pyxel.Image(1, 1)
             img.cls(0)
             return TextSprite(img=img, w=0, h=0)
+
+        if not _PIL_OK:
+            # Fallback for environments where Pillow is unavailable (e.g., some web builds).
+            safe = text.encode("ascii", "replace").decode("ascii")
+            w = max(1, len(safe) * 4)
+            h = 6
+            px = pyxel.Image(w, h)
+            px.cls(0)
+            px.text(0, 0, safe, color)
+            return TextSprite(img=px, w=w, h=h)
 
         size = int(size_px) if size_px is not None else self.font_px
         font = _load_font(size)

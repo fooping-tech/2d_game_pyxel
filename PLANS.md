@@ -94,3 +94,80 @@
 
 - `save/highscore.json`: ハイスコア
 - `save/runs.json`: 直近100件の記録（ランキング用）
+
+## GitHub Pages（HTML出力）でプレイできるようにする計画
+
+目的: GitHub ActionsでHTML版をビルドしてArtifacts化し、GitHub Pagesにデプロイしてブラウザでプレイ可能にする。
+
+### 前提
+
+- pyxelのHTML出力（WebAssembly/Emscripten）機能を利用する。
+- GitHub Pagesは `gh-pages` ブランチ、または `actions` のPagesデプロイ（`pages`）を利用する。
+- ランタイム保存（ハイスコア等）はブラウザ側の制約があるため、最初は「保存なし/揮発」でも良い（必要なら後でlocalStorage等へ対応）。
+
+### 実装ステップ
+
+1. ローカルでHTMLビルド手順を確立
+   - `pyxel` が提供するビルドコマンド（例: `pyxel app2html`）でHTMLを生成する。
+     - `pyxel app2html <app.pyxapp>` は内部的に `pyxel.js` の `launchPyxel({ gamepad: "enabled", ... })` を使う（仮想ゲームパッド表示に対応）。
+   - もしくはHTMLを手書きする場合は、`pyxel.js` を読み込んで以下の形式で埋め込む:
+     - `<pyxel-run root="." name="main.py" gamepad="enabled"></pyxel-run>`
+     - `<pyxel-play root="." name="main.pyxapp" gamepad="enabled"></pyxel-play>`
+   - 生成物（`index.html` と wasm/js/asset群）がGitHub Pagesの静的ホスティングで動くことを確認する。
+   - 入口は `python -m game` 相当（`game/app.py`）をHTMLビルド対象にする。
+
+2. 出力ディレクトリとignoreを整備
+   - `dist/` をビルド成果物置き場にする。
+   - `dist/` はgit管理しない（`.gitignore` 済み）。
+
+3. GitHub Actions ワークフローを追加
+   - `.github/workflows/pages.yml` を追加し、以下を行う:
+     - Pythonセットアップ（推奨: 3.11）
+     - `pip install -r requirements.txt`
+     - HTMLビルドコマンドを実行（`dist/` へ出力）
+     - `actions/upload-pages-artifact` で `dist/` をアップロード
+     - `actions/deploy-pages` でデプロイ
+
+4. Pages設定を有効化
+   - リポジトリ設定で GitHub Pages のSourceを `GitHub Actions` に設定する。
+
+5. READMEに公開URLとビルド方法を追記
+   - ローカルでのHTML出力手順、GitHub PagesのURL、既知の制約（保存/音周りなど）を追記する。
+
+### 受け入れ条件
+
+- `main` へのpush（または手動実行）でGitHub Actionsが成功し、GitHub Pagesに `index.html` がデプロイされる。
+- ブラウザ上で起動し、タイトル→番人→ローディング→ステータス→プレイ→ゲームオーバーまで一連が動作する。
+
+### 既知の注意（Web/モバイル）
+
+- `gamepad="enabled"` は `pyxel.js` 側の仮想ゲームパッド（タッチUI）表示であり、**ゲーム本体がWebで動くこと**とは別問題。
+- 本プロジェクトは日本語描画に `Pillow` を使っているため、Pyodide環境（`<pyxel-run>`）での動作可否は要検証。Web向けには「Pillow不要な描画手段」へ寄せるか、Webビルド方式を `pyxel app2html` に統一して検証する。
+
+## ゲームパッド対応（計画）
+
+目的: キーボードに加えてゲームパッドでもプレイ/操作できるようにする（ローカル/HTML両方を想定）。
+
+### 対応範囲（最低限）
+
+- 左右移動: 十字キー左右、または左スティックX
+- ジャンプ: Aボタン相当（例: ボタン0）
+- 決定: A（ジャンプと同一でも可）
+- 戻る: Bボタン相当（例: ボタン1）
+
+### 実装方針
+
+- `game/input.py` にゲームパッド入力の読み取りを追加し、既存の `InputState` に統合する。
+- pyxelのゲームパッドAPI（例: `pyxel.btn()` の `GAMEPAD1_BUTTON_*` / `GAMEPAD1_AXIS_*` / `GAMEPAD1_DPAD_*`）を利用する。
+- 軸入力はデッドゾーン（例: 0.25）を設け、左右同時入力は相殺する。
+- HTML版でもブラウザのGamepad API経由で動く前提で、キーボードと同様に使えることを目標とする（環境差がある場合はREADMEに既知事項として記載）。
+
+### 追加設定（任意）
+
+- デッドゾーン調整: `GAME_GAMEPAD_DEADZONE`
+- ボタン割り当て調整（必要になったら）: `GAME_GAMEPAD_JUMP_BTN` 等
+
+### 受け入れ条件
+
+- タイトル/番人/ステータス/ゲーム中/ゲームオーバーの全シーンで、ゲームパッドのみで一連操作が可能。
+- 左スティックの微小入力で勝手に移動しない（デッドゾーンが効く）。
