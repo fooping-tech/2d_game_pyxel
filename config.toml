@@ -1,0 +1,32 @@
+# Shared configuration (used by both desktop and web builds)
+
+[game]
+# camera / fail conditions
+scroll_start_player_screen_y = 124
+fall_below_screen_px = 432
+
+# water
+water_start_offset = 500
+water_base_speed = 150.0
+water_speed_per_floor = 0.55
+
+# zone/biome
+zone_floor_step = 10
+zone_popup_seconds = 0.55
+zone_text_font_px = 22
+zone_text_font_px_big = 36
+
+# audio
+sfx_volume = 0.90
+bgm_volume = 0.55
+
+# title / game over fonts
+title_font_px_big = 30
+game_over_font_px_big = 30
+
+# language
+# - "auto": desktop uses Japanese if possible, web falls back to English
+# - "en": force English (useful for web)
+# - "ja": force Japanese (desktop only; web may not support)
+lang = "auto"
+

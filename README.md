@@ -11,9 +11,9 @@ pip install -r requirements.txt
 python3 -m game
 ```
 
-## 設定（.env）
+## 設定（config.toml）
 
-調整用の設定は `.env` に書けます（起動時に読み込みます）。
+配布/共有できる設定は `config.toml` に書きます（ローカル/HTMLの両方で参照します）。
 
 - `GAME_SCROLL_START_PLAYER_SCREEN_Y`
 - `GAME_FALL_BELOW_SCREEN_PX`
@@ -28,6 +28,10 @@ python3 -m game
 - `GAME_BGM_VOLUME`
 - `GAME_TITLE_FONT_PX_BIG`
 - `GAME_GAME_OVER_FONT_PX_BIG`
+
+### ローカル上書き（.env）
+
+ローカル実行時だけ `.env` / 環境変数で上書きできます（Web版では共有できないため基本使いません）。
 
 ## GitHub Pages（HTML版の公開）
 

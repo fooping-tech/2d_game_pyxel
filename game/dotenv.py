@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 
 def load_dotenv(path: str = ".env") -> None:
+    # Web builds shouldn't rely on env/.env.
+    if sys.platform == "emscripten":
+        return
     p = Path(path)
     if not p.exists() or not p.is_file():
         return
@@ -26,4 +30,3 @@ def load_dotenv(path: str = ".env") -> None:
             os.environ.setdefault(key, value)
     except Exception:
         return
-

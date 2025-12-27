@@ -34,6 +34,44 @@
   - `GAME_WATER_BASE_SPEED`（デフォルト: 42px/s）
   - `GAME_WATER_SPEED_PER_FLOOR`（デフォルト: 0.55px/s per floor）
 
+## 設定の配布方式（.env → config.toml へ移行する計画）
+
+背景: 現在は `.env` を起動時に読み込む方式だが、Web版（HTML/GitHub Pages）では環境変数/`.env` をユーザに共有できず、設定を反映しづらい。
+
+目的: 設定をリポジトリに同梱でき、Web版でも確実に読み込める方式に切り替える。
+
+### 方針
+
+- `config.toml` をリポジトリ直下に追加し、ゲーム設定は基本的にここから読む。
+- ローカル開発者向けに `.env` は「上書き用（任意）」として残す（ただしWeb版では無視される）。
+- 読み込み優先順位（案）:
+  1) `config.toml`（デフォルト/配布の基準）
+  2) ローカル実行時のみ `.env` / 環境変数で上書き（開発用）
+
+### 実装ステップ
+
+1. `config.toml` を追加
+   - 現在 `.env` で調整している項目（水位、文字サイズ、BGM/SE音量、ゾーン切替など）をすべてTOMLへ移す。
+
+2. `game/config.py` を改修
+   - TOMLを読み込んで `GameConfig` を構築する `load_toml()` を追加。
+   - Web環境（`sys.platform == "emscripten"`）では `.env` を読まず、`config.toml` のみを採用。
+
+3. `game/dotenv.py` / `.env` の扱いを整理
+   - `.env` は「ローカル上書き用」として README に明記。
+
+4. HTMLビルドに `config.toml` を同梱
+   - `scripts/build_pages.py` の packaging 対象に `config.toml` を含める（`pyxel package` が含めるように app_dir へコピー）。
+
+5. ドキュメント更新
+   - `README.md` の「設定」節を `config.toml` 中心に書き換える。
+   - Web版での設定変更（カスタムしたい場合）の案を記載（例: `config.toml` を編集して再デプロイ）。
+
+### 受け入れ条件
+
+- ローカル実行/HTML実行の両方で `config.toml` の設定が反映される。
+- Web版で `.env` を使わなくても、音量/水位/文字サイズ等の設定が意図通りになる。
+
 ### 文字サイズ
 
 - UI/会話/ランキング等は日本語フォントをラスタライズして描画し、文字サイズを大きめにする。

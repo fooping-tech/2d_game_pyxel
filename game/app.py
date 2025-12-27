@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+import os
 
 import pyxel
 
@@ -27,6 +28,8 @@ class GameApp:
         self._dt = 1.0 / FPS
 
         self._cfg = GameConfig.load()
+        if self._cfg.lang and str(self._cfg.lang).strip().lower() not in {"", "auto"}:
+            os.environ.setdefault("GAME_LANG", str(self._cfg.lang).strip())
         self._audio = AudioManager.create(self._cfg)
         self._scores = ScoreStore()
         self._scores.load()

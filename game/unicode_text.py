@@ -116,11 +116,25 @@ class UnicodeText:
         if not _PIL_OK:
             # Fallback for environments where Pillow is unavailable (e.g., some web builds).
             safe = text.encode("ascii", "replace").decode("ascii")
-            w = max(1, len(safe) * 4)
-            h = 6
+            size = int(size_px) if size_px is not None else self.font_px
+            scale = max(1, int(round(size / 6)))
+
+            w0 = max(1, len(safe) * 4)
+            h0 = 6
+            src = pyxel.Image(w0, h0)
+            src.cls(0)
+            src.text(0, 0, safe, color)
+
+            w = w0 * scale
+            h = h0 * scale
             px = pyxel.Image(w, h)
             px.cls(0)
-            px.text(0, 0, safe, color)
+            for y in range(h0):
+                for x in range(w0):
+                    c = src.pget(x, y)
+                    if c == 0:
+                        continue
+                    px.rect(x * scale, y * scale, scale, scale, c)
             return TextSprite(img=px, w=w, h=h)
 
         size = int(size_px) if size_px is not None else self.font_px

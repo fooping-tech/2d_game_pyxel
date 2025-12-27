@@ -32,6 +32,11 @@ def main() -> None:
 
         shutil.copytree(repo_root / "game", app_dir / "game", dirs_exist_ok=True, ignore=_ignore)
 
+        # Shared config for web build.
+        cfg = repo_root / "config.toml"
+        if cfg.exists():
+            shutil.copy2(cfg, app_dir / "config.toml")
+
         # Startup script required by `pyxel package` must be under `app_dir`.
         startup = app_dir / "main.py"
         startup.write_text(
