@@ -54,7 +54,8 @@ class GameOverScene:
         reason = str(self._payload.get("reason", "defeated"))
         zone = zone_for_floor(floor, step=self._cfg.zone_floor_step)
         line1 = f"FLOOR: {floor}"
-        line1b = f"STAGE: {zone.name_jp}"
+        stage = zone.name_jp if self._utext.unicode_ok else zone.name_en
+        line1b = f"STAGE: {stage}"
         line2 = f"HIGHSCORE: {self._scores.highscore}"
         line3 = f"REASON: {reason}"
         s1 = self._utext.render(line1, 7)

@@ -24,19 +24,35 @@ class GuardianScene:
     def __init__(self, audio: AudioManager, utext: UnicodeText) -> None:
         self._audio = audio
         self._utext = utext
-        self._questions: list[Question] = [
-            Question("世界観はどれが良い？", ["古代遺跡", "蒸気機関", "深海都市"]),
-            Question("色合いはどれだ？", ["寒色", "暖色", "毒々しいネオン"]),
-            Question("敵の雰囲気は？", ["ゆるい魔物", "機械兵", "影の獣"]),
-            Question("アイテムの質感は？", ["宝石", "薬瓶", "古文書"]),
-            Question("塔の危険は何だ？", ["棘", "呪い", "猛風"]),
-        ]
-        self._guardian_lines = [
-            "よく来たなぁ小僧。",
-            "私はこの塔の番人だ！ぐはは！",
-            "貴様の旅路の“雰囲気”を決めてやろう…。",
-            "3択に答えるか、自由に書け！",
-        ]
+        jp = self._utext.unicode_ok
+        if jp:
+            self._questions = [
+                Question("世界観はどれが良い？", ["古代遺跡", "蒸気機関", "深海都市"]),
+                Question("色合いはどれだ？", ["寒色", "暖色", "毒々しいネオン"]),
+                Question("敵の雰囲気は？", ["ゆるい魔物", "機械兵", "影の獣"]),
+                Question("アイテムの質感は？", ["宝石", "薬瓶", "古文書"]),
+                Question("塔の危険は何だ？", ["棘", "呪い", "猛風"]),
+            ]
+            self._guardian_lines = [
+                "よく来たなぁ小僧。",
+                "私はこの塔の番人だ！ぐはは！",
+                "貴様の旅路の“雰囲気”を決めてやろう…。",
+                "3択に答えるか、自由に書け！",
+            ]
+        else:
+            self._questions = [
+                Question("Choose a world setting:", ["Ancient ruins", "Steampunk", "Deep sea city"]),
+                Question("Choose a color mood:", ["Cool", "Warm", "Toxic neon"]),
+                Question("Enemy vibe?", ["Goofy monsters", "Mecha soldiers", "Shadow beasts"]),
+                Question("Item material?", ["Gems", "Potions", "Ancient tomes"]),
+                Question("What is the tower's danger?", ["Spikes", "Curse", "Gale wind"]),
+            ]
+            self._guardian_lines = [
+                "So, you've come...",
+                "I am the Guardian of this tower.",
+                "I will decide your journey's vibe!",
+                "Pick 1-3, or write freely (ASCII).",
+            ]
 
         self._q_index = 0
         self._selection = 0  # 0..2 or 3=free
@@ -163,7 +179,8 @@ class GuardianScene:
 
         selected = self._selection == 3
         color = 10 if selected else 7
-        self._utext.blit(panel_x + 24, base_y + 3 * 34, "4. 自由記述:", color)
+        free_label = "4. 自由記述:" if self._utext.unicode_ok else "4. Free text:"
+        self._utext.blit(panel_x + 24, base_y + 3 * 34, free_label, color)
 
         box_x = panel_x + 160
         box_y = base_y + 3 * 34 - 4
@@ -171,7 +188,7 @@ class GuardianScene:
         box_h = 28
         pyxel.rect(box_x, box_y, box_w, box_h, 1)
         pyxel.rectb(box_x, box_y, box_w, box_h, 13)
-        typed = self._free_text or "（ここに入力）"
+        typed = self._free_text or ("（ここに入力）" if self._utext.unicode_ok else "(type here)")
         self._utext.blit(box_x + 8, box_y + 6, typed, 6)
 
         pyxel.text(panel_x + 18, panel_y + panel_h - 26, "Up/Down or 1-4, Enter/Space confirm, Esc back", 5)

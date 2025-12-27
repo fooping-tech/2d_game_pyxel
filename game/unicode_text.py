@@ -98,6 +98,7 @@ class TextSprite:
 class UnicodeText:
     def __init__(self, *, font_px: int = 14) -> None:
         self.font_px = font_px
+        self.unicode_ok = _PIL_OK
 
     @lru_cache(maxsize=1024)
     def render(self, text: str, color: int, size_px: int | None = None) -> TextSprite:

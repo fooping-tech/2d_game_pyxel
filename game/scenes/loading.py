@@ -38,7 +38,7 @@ class LoadingScene:
         pyxel.cls(self._bg)
 
         # Title
-        title = "生成中..."
+        title = "生成中..." if self._utext.unicode_ok else "Loading..."
         spr = self._utext.render(title, 7)
         self._utext.blit(pyxel.width // 2 - spr.w // 2, 160, title, 7)
 

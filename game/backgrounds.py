@@ -11,23 +11,24 @@ from game.pixel_art import zone_tile
 class Zone:
     index: int
     name_jp: str
+    name_en: str
     bg: int
     dot: int
     accent: int
 
 
 ZONES: list[Zone] = [
-    Zone(0, "砂浜", bg=15, dot=10, accent=4),
-    Zone(1, "道路", bg=6, dot=5, accent=0),
-    Zone(2, "村", bg=11, dot=3, accent=4),
-    Zone(3, "町", bg=13, dot=6, accent=1),
-    Zone(4, "山", bg=3, dot=11, accent=0),
-    Zone(5, "富士山", bg=12, dot=6, accent=7),
-    Zone(6, "空", bg=12, dot=7, accent=6),
-    Zone(7, "宇宙", bg=1, dot=13, accent=7),
-    Zone(8, "月", bg=5, dot=6, accent=7),
-    Zone(9, "火星", bg=2, dot=4, accent=8),
-    Zone(10, "天国", bg=7, dot=15, accent=14),
+    Zone(0, "砂浜", "Beach", bg=15, dot=10, accent=4),
+    Zone(1, "道路", "Road", bg=6, dot=5, accent=0),
+    Zone(2, "村", "Village", bg=11, dot=3, accent=4),
+    Zone(3, "町", "Town", bg=13, dot=6, accent=1),
+    Zone(4, "山", "Mountain", bg=3, dot=11, accent=0),
+    Zone(5, "富士山", "Mt. Fuji", bg=12, dot=6, accent=7),
+    Zone(6, "空", "Sky", bg=12, dot=7, accent=6),
+    Zone(7, "宇宙", "Space", bg=1, dot=13, accent=7),
+    Zone(8, "月", "Moon", bg=5, dot=6, accent=7),
+    Zone(9, "火星", "Mars", bg=2, dot=4, accent=8),
+    Zone(10, "天国", "Heaven", bg=7, dot=15, accent=14),
 ]
 
 

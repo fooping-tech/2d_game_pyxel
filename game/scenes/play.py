@@ -385,7 +385,7 @@ class PlayScene:
         if self._zone_popup_s > 0:
             t = min(1.0, self._zone_popup_s / max(0.001, self._cfg.zone_popup_seconds))
             size = int(self._cfg.zone_text_font_px + (self._cfg.zone_text_font_px_big - self._cfg.zone_text_font_px) * t)
-            text = zone.name_jp
+            text = zone.name_jp if self._utext.unicode_ok else zone.name_en
             spr = self._utext.render(text, self._theme.accent, size)
             self._utext.blit(WIDTH // 2 - spr.w // 2, bar_h + 8, text, self._theme.accent, size_px=size)
 
