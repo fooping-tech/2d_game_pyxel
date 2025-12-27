@@ -47,10 +47,16 @@ class GameApp:
         self._current.enter({})
 
         self._prev_inp: InputState | None = None
+        self._audio_unlocked_once = False
 
     def update(self) -> None:
         inp = read_input(self._prev_inp)
         self._prev_inp = inp
+        if (not self._audio_unlocked_once) and (
+            inp.left or inp.right or inp.jump_down or inp.confirm or inp.back
+        ):
+            self._audio.unlock()
+            self._audio_unlocked_once = True
 
         try:
             change = self._current.update(self._dt, inp)

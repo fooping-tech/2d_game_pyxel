@@ -34,8 +34,10 @@ cat > site/index.html <<'HTML'
 <title>2d_game_pyxel</title>
 <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel@2.5.11/wasm/pyxel.js"></script>
 <style>
-html, body { margin: 0; padding: 0; overflow: hidden; background: #000; }
-canvas { outline: none; }
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+body { display: flex; align-items: center; justify-content: center; }
+pyxel-run { display: block; }
+canvas { outline: none; image-rendering: pixelated; touch-action: none; }
 </style>
 <script>
 // Prevent arrow keys from scrolling the page while playing.
@@ -55,6 +57,22 @@ function tryResumePyxelAudio() {
 document.addEventListener("touchstart", tryResumePyxelAudio, { passive: true });
 document.addEventListener("click", tryResumePyxelAudio, { passive: true });
 
+function fitPyxelCanvas() {
+  const c = document.querySelector("canvas");
+  if (!c) return false;
+  const cw = c.width || 960;
+  const ch = c.height || 540;
+  const vw = window.innerWidth || cw;
+  const vh0 = window.innerHeight || ch;
+  const vh = ("ontouchstart" in window) ? Math.floor(vh0 * 0.88) : vh0;
+  const s = Math.min(vw / cw, vh / ch);
+  c.style.width = `${Math.max(1, Math.floor(cw * s))}px`;
+  c.style.height = `${Math.max(1, Math.floor(ch * s))}px`;
+  return true;
+}
+window.addEventListener("resize", fitPyxelCanvas);
+window.addEventListener("orientationchange", fitPyxelCanvas);
+
 // Ensure the Pyxel canvas can receive keyboard focus.
 function focusPyxelCanvas() {
   const c = document.querySelector("canvas");
@@ -68,6 +86,7 @@ function focusPyxelCanvas() {
 let tries = 0;
 const t = setInterval(() => {
   tries += 1;
+  fitPyxelCanvas();
   if (focusPyxelCanvas() || tries > 300) clearInterval(t);
 }, 50);
 </script>
@@ -77,4 +96,3 @@ HTML
 
 printf '%s\n' "" > site/.nojekyll
 echo "Built: site/index.html"
-

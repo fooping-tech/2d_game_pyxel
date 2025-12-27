@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 
 import pyxel
@@ -22,6 +23,8 @@ class AudioManager:
         self._last_play_frame: dict[str, int] = {}
         self._bgm_name_to_sound: dict[str, int] = {}
         self._bgm_current: str | None = None
+        self._bgm_pending: str | None = None
+        self._unlocked: bool = sys.platform != "emscripten"
         self.debug: str = "pyxel"
 
     @classmethod
@@ -85,6 +88,8 @@ class AudioManager:
     def play(self, name: str, *, volume: float = 1.0) -> None:
         if not self.enabled:
             return
+        if not self._unlocked:
+            return
         sound_id = self._name_to_sound.get(name)
         if sound_id is None:
             return
@@ -100,6 +105,8 @@ class AudioManager:
 
     def play_loop(self, name: str, *, volume: float = 1.0) -> None:
         if not self.enabled:
+            return
+        if not self._unlocked:
             return
         sound_id = self._name_to_sound.get(name)
         if sound_id is None:
@@ -119,6 +126,9 @@ class AudioManager:
     def play_bgm(self, name: str) -> None:
         if not self.enabled:
             return
+        if not self._unlocked:
+            self._bgm_pending = name
+            return
         if self._bgm_current == name and pyxel.play_pos(2) is not None:
             return
         snd = self._bgm_name_to_sound.get(name)
@@ -131,3 +141,12 @@ class AudioManager:
     def stop_bgm(self) -> None:
         pyxel.stop(2)
         self._bgm_current = None
+
+    def unlock(self) -> None:
+        if self._unlocked:
+            return
+        self._unlocked = True
+        if self._bgm_pending is not None:
+            name = self._bgm_pending
+            self._bgm_pending = None
+            self.play_bgm(name)
