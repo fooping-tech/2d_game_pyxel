@@ -123,6 +123,10 @@ class GuardianScene:
             self._selection = (self._selection - 1) % 4
         elif pyxel.btnp(pyxel.KEY_DOWN):
             self._selection = (self._selection + 1) % 4
+        elif pyxel.btnp(pyxel.KEY_W):
+            self._selection = (self._selection - 1) % 4
+        elif pyxel.btnp(pyxel.KEY_S):
+            self._selection = (self._selection + 1) % 4
         elif pyxel.btnp(pyxel.KEY_1):
             self._selection = 0
         elif pyxel.btnp(pyxel.KEY_2):
