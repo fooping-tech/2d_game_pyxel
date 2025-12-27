@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -98,7 +99,12 @@ class TextSprite:
 class UnicodeText:
     def __init__(self, *, font_px: int = 14) -> None:
         self.font_px = font_px
-        self.unicode_ok = _PIL_OK
+        # `Pillow` is used for Japanese rasterization; many web runtimes won't support it well.
+        lang = os.environ.get("GAME_LANG", "").strip().lower()
+        force_ascii = lang in {"en", "ascii"}
+        force_ja = lang in {"ja", "jp", "japanese"}
+        is_web = sys.platform == "emscripten"
+        self.unicode_ok = (not is_web) and (_PIL_OK or force_ja) and (not force_ascii)
 
     @lru_cache(maxsize=1024)
     def render(self, text: str, color: int, size_px: int | None = None) -> TextSprite:

@@ -35,10 +35,18 @@ class GenerationJob:
         self.result: GenerationResult | None = None
         self._lock = threading.Lock()
         self._start = time.time()
+        self._cooperative: bool = False
 
     def start(self) -> None:
-        t = threading.Thread(target=self._run, daemon=True)
-        t.start()
+        try:
+            t = threading.Thread(target=self._run, daemon=True)
+            t.start()
+        except RuntimeError:
+            # Some runtimes (e.g., Pyodide/Web) can't start threads.
+            # Fall back to cooperative (single-thread) progress driven by snapshot().
+            with self._lock:
+                self._cooperative = True
+                self._start = time.time()
 
     def _set_progress(self, value: float) -> None:
         with self._lock:
@@ -51,6 +59,15 @@ class GenerationJob:
             self.result = result
 
     def snapshot(self) -> tuple[float, bool, GenerationResult | None]:
+        with self._lock:
+            cooperative = self._cooperative and (not self.done)
+        if cooperative:
+            # Drive pseudo-progress without sleeping.
+            elapsed = time.time() - self._start
+            self._set_progress(min(0.95, elapsed / 1.2))
+            if elapsed >= 1.2 and not self.done:
+                spec = CharacterSpec.from_seed(self.seed)
+                self._finish(GenerationResult(ok=True, spec=spec, debug="cooperative deterministic"))
         with self._lock:
             return self.progress, self.done, self.result
 
