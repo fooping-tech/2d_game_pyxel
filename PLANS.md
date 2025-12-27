@@ -145,6 +145,11 @@
 - 本プロジェクトは日本語描画に `Pillow` を使っているため、Pyodide環境（`<pyxel-run>`）での動作可否は要検証。Web向けには「Pillow不要な描画手段」へ寄せるか、Webビルド方式を `pyxel app2html` に統一して検証する。
 - GitHub Actions（Ubuntu）で `ImportError: libSDL2-2.0.so.0` が出る場合は、pyxelのネイティブモジュールがSDL2ランタイムに依存しているのが原因。
   - 対策: workflowに `apt-get install -y libsdl2-2.0-0` を追加してから `pip install` / ビルドを実行する。
+- `actions/deploy-pages` が `Failed to create deployment (status: 404)` / `HttpError: Not Found` で失敗する場合は、GitHub Pages が未有効化、または Pages のSourceが `GitHub Actions` になっていないのが原因。
+  - 対策:
+    - リポジトリ設定 `Settings → Pages` で Pages を有効化する。
+    - `Build and deployment` の `Source` を `GitHub Actions` に設定する。
+    - 初回は権限反映に時間がかかることがあるため、設定後にworkflowを再実行する。
 
 ## ゲームパッド対応（計画）
 

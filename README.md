@@ -29,6 +29,27 @@ python3 -m game
 - `GAME_TITLE_FONT_PX_BIG`
 - `GAME_GAME_OVER_FONT_PX_BIG`
 
+## GitHub Pages（HTML版の公開）
+
+GitHub ActionsでHTML版をビルドしてGitHub Pagesへデプロイできます。
+
+### セットアップ（初回のみ）
+
+- GitHubのリポジトリ設定 `Settings → Pages` を開き、`Build and deployment` の `Source` を `GitHub Actions` に設定します。
+  - 未設定だと `actions/deploy-pages` が `404 Not Found` で失敗します。
+
+### ローカルでHTML生成
+
+```bash
+python3 scripts/build_pages.py
+```
+
+生成物は `dist/index.html` です。
+
+### GitHub Actions（CI）での注意
+
+- Ubuntu上で `ImportError: libSDL2-2.0.so.0` が出る場合はSDL2不足が原因です（workflowで `libsdl2-2.0-0` を導入します）。
+
 ## 操作
 
 - ← / →: 移動
